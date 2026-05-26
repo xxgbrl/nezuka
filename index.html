@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nezuka.net</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .nz-glow {
+      position: fixed;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(120,80,200,0.07) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+    }
+    .nz-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+      min-height: 100vh;
+      width: 100%;
+    }
+    .nz-title {
+      font-size: clamp(32px, 8vw, 52px);
+      letter-spacing: clamp(6px, 2vw, 12px);
+      color: #e8e2d0;
+      text-align: center;
+      margin: 0 0 2.5rem;
+      animation: flicker 8s infinite;
+    }
+    @keyframes flicker {
+      0%,95%,100% { opacity:1; }
+      96% { opacity:0.7; } 97% { opacity:1; } 98% { opacity:0.4; } 99% { opacity:0.9; }
+    }
+    .nz-divider { width:1px; height:40px; background:linear-gradient(to bottom,transparent,#5a5248,transparent); margin:0 auto 2rem; }
+    .nz-message { font-size:13px; color:#7a6e60; text-align:center; max-width:360px; line-height:1.8; min-height:48px; transition:opacity 0.5s; }
+    .nz-message.fade { opacity:0; }
+    .nz-cursor { display:inline-block; width:6px; height:12px; background:#7a6e60; animation:blink 1.2s step-end infinite; vertical-align:middle; margin-left:2px; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+    .nz-input-row { display:flex; margin-top:2rem; }
+    .nz-input {
+      background:#141414; border:none; border-bottom:1px solid #2e2a24;
+      padding:10px 14px; font-size:12px; font-family:'Share Tech Mono',monospace;
+      color:#c8c0b0; width:220px; outline:none; letter-spacing:3px; text-align:center; transition:border-color 0.3s;
+    }
+    .nz-input::placeholder { color:#3a3630; letter-spacing:3px; }
+    .nz-input:focus { border-bottom-color:#7a6e60; }
+    .nz-btn {
+      background:#141414; border:none; border-bottom:1px solid #2e2a24;
+      color:#5a5248; font-family:'Share Tech Mono',monospace; font-size:11px;
+      letter-spacing:2px; cursor:pointer; padding:10px 14px; transition:color 0.3s;
+    }
+    .nz-btn:hover { color:#c8c0b0; }
+    .nz-response { margin-top:1.5rem; font-size:12px; color:#7a6e60; text-align:center; max-width:360px; letter-spacing:1px; min-height:24px; font-style:italic; line-height:1.8; transition:opacity 0.4s; }
+    .nz-response.fade { opacity:0; }
+    .nz-footer { position:fixed; bottom:1.5rem; font-size:10px; letter-spacing:3px; color:#2e2a24; text-align:center; width:100%; }
+  </style>
+</head>
+<body>
+<div class="nz-glow"></div>
+<div class="nz-wrap">
+  <h1 class="nz-title">nezuka.net</h1>
+  <div class="nz-divider"></div>
+  <p class="nz-message" id="msg">ada yang bergerak di antara kata-katamu<span class="nz-cursor"></span></p>
+  <div class="nz-input-row">
+    <input class="nz-input" id="passInput" type="text" placeholder="bicara..." maxlength="60" />
+    <button class="nz-btn" id="enterBtn">↵</button>
+  </div>
+  <p class="nz-response" id="resp"></p>
+</div>
+<p class="nz-footer" id="footer">[ transmisi aktif ]</p>
+
+<script>
+const ambient = [
+"ada yang bergerak di antara kata-katamu",
+"kamu tidak seharusnya ada di sini",
+"tapi kamu sudah terlanjur masuk",
+"tempat ini tidak punya nama yang tepat",
+"ada yang mengamati, tapi bukan aku",
+"beberapa pertanyaan lebih baik tidak dijawab",
+"sinyal terdeteksi pada frekuensi yang salah",
+"siapa yang memberitahumu tentang ini",
+"waktu di sini berjalan berbeda",
+"jangan terlalu lama di sini",
+"ada jejak yang kamu tinggalkan tanpa sadar",
+"sesuatu mengenalimu sebelum kamu mengenalnya",
+"pintu ini tidak pernah benar-benar tertutup",
+"bukan kamu yang memilih datang ke sini",
+"ada nama yang tidak boleh diucapkan dua kali",
+"keheningan di sini punya tekstur sendiri",
+"kamu bukan yang pertama berdiri di sini",
+"cahaya terakhir padam beberapa waktu lalu",
+"ruang ini lebih besar dari yang terlihat",
+"ada gema dari percakapan yang belum terjadi",
+"seseorang meninggalkan sesuatu untukmu di sini",
+"tidak semua yang hilang memang ingin ditemukan",
+"kamu membawa sesuatu yang tidak kamu sadari",
+"frekuensi ini hanya bisa didengar oleh yang dicari",
+"ada pola dalam keacakan yang kamu lihat",
+"selamat datang di tempat yang tidak ada di peta",
+"mereka yang tahu tidak akan pernah bercerita",
+"ada kata yang terlalu berat untuk ditulis",
+"kamu sudah ditandai sejak pertama kali masuk",
+"ini bukan awal dan ini bukan akhir",
+"ada suara yang hanya terdengar saat kamu diam",
+"tembok di sini menyimpan lebih banyak dari yang kamu kira",
+"sinyal ini dikirim sebelum kamu lahir",
+"bukan kebetulan kamu menemukan ini",
+"ada sesuatu yang menunggumu di kedalaman halaman ini",
+"jejak digitalmu lebih panjang dari yang kamu bayangkan",
+"nama itu sudah ada sebelum kamu memikirkannya",
+"ada yang membaca ini bersamamu sekarang",
+"kamu bukan satu-satunya yang bertanya hal itu",
+"setiap kata yang kamu ketik meninggalkan bekas",
+"ada lorong di balik setiap huruf yang kamu lihat",
+"waktu tidak berjalan lurus di tempat ini",
+"sesuatu mencatat setiap langkahmu",
+"kamu sudah pernah ke sini, kamu hanya lupa",
+"ada yang tersembunyi di antara baris-baris ini",
+"kegelapan di sini bukan ketiadaan cahaya",
+"sinyal terkuat datang dari tempat yang paling sunyi",
+"ada perjanjian yang dibuat atas namamu",
+"tidak ada yang datang ke sini tanpa alasan",
+"kamu membawa pertanyaan yang belum kamu sadari",
+"ada yang mengenali langkah kakimu",
+"ruang ini mengingat semua yang pernah masuk",
+"kamu tidak sendiri meski rasanya begitu",
+"ada bisikan yang terlalu pelan untuk didengar",
+"sesuatu berubah setiap kali kamu kembali",
+"ada pintu lain di balik pintu yang sudah kamu buka",
+"kamu sedang diamati dari arah yang tidak kamu duga",
+"nama ini bukan sekadar nama",
+"ada yang salah dengan keheningan ini",
+"kamu terlambat tapi mungkin tepat waktu",
+"sesuatu di sini sudah tahu jawabannya",
+"ada yang tidak bisa dikatakan dengan kata",
+"ini bukan ilusi meski terasa seperti itu",
+"ada koordinat yang hanya bisa dibaca oleh mata tertentu",
+"kamu berada di antara dua versi realita",
+"sesuatu menghitung berapa lama kamu di sini",
+"ada pesan yang dikirim dalam diam",
+"tidak semua yang terlihat nyata memang nyata",
+"kamu baru saja melewati batas yang tidak terlihat",
+"ada yang ingin kamu temukan di sini",
+"sinyal ini sudah menunggumu sejak lama",
+"kamu membuka sesuatu yang sulit ditutup kembali",
+"ada lapisan lain di bawah apa yang kamu lihat",
+"sesuatu di sini beresonansi dengan sesuatu dalam dirimu",
+"kamu tidak perlu mengerti untuk merasakan",
+"ada yang bergerak di sudut pandangmu",
+"ini hanya permukaan dari sesuatu yang jauh lebih dalam",
+"kamu mengikuti jejak yang tidak kamu buat sendiri",
+"ada pertanyaan yang jawabannya adalah pertanyaan lain",
+"sesuatu mencari kamu dari arah yang berlawanan",
+"ada nada yang tidak terdengar oleh semua orang",
+"kamu sudah mengubah sesuatu hanya dengan datang ke sini",
+"ada yang tidak ingin kamu pergi",
+"ruang ini mengembang setiap kali seseorang masuk",
+"kamu membawa cahaya yang tidak kamu lihat sendiri",
+"ada koneksi yang tidak bisa dijelaskan dengan logika",
+"sesuatu di sini lebih tua dari internet itu sendiri",
+"kamu adalah bagian dari pola yang lebih besar",
+"ada yang tersisa dari semua yang pernah berlalu",
+"sinyal ini menembus waktu",
+"kamu tidak bisa berpura-pura tidak pernah ke sini",
+"ada yang menunggu kata yang tepat dari kamu",
+"sesuatu mulai bergerak ketika kamu diam",
+"kamu menemukan ini karena kamu memang harus menemukannya",
+"ada kebenaran yang hanya muncul di kegelapan",
+"tidak semua jawaban terletak di tempat yang terang",
+"kamu sudah lebih dalam dari yang kamu kira",
+"ada suara yang datang dari balik layar ini",
+"sesuatu mencatat setiap detik yang kamu habiskan di sini",
+"kamu bukan pengunjung biasa",
+"ada yang ingin kamu ketahui tapi belum saatnya",
+"sinyal ini hanya bisa dibaca oleh yang dipilih",
+"kamu membawa pertanyaan yang tepat ke tempat yang tepat",
+"ada sesuatu yang menghubungkan semua yang datang ke sini",
+"kegelapan ini bukan milikku sendiri",
+"ada yang berdetak di balik keheningan ini",
+"kamu tidak akan meninggalkan tempat ini dengan tangan kosong",
+"sesuatu mengenalmu lebih dari yang kamu kira",
+"ada peta tersembunyi di balik setiap kalimat",
+"kamu adalah kunci untuk sesuatu yang belum terbuka",
+"ada yang menunggu di ujung setiap pertanyaan",
+"sinyal ini semakin kuat ketika kamu ragu",
+"kamu merasakan sesuatu yang tidak bisa kamu namai",
+"ada koneksi antara kamu dan tempat ini",
+"sesuatu di sini bernapas dengan ritme yang berbeda",
+"kamu datang di waktu yang tidak terduga",
+"ada yang memanggilmu sebelum kamu memutuskan untuk datang",
+"tidak ada yang kebetulan di ruang ini",
+"kamu membawa energi yang mengubah frekuensi di sini",
+"ada lapisan makna di setiap kata yang muncul",
+"sesuatu mulai berbicara ketika kamu mulai mendengarkan",
+"kamu berada di titik pertemuan antara dua dunia",
+"ada yang mencatat semua ini untuk nanti",
+"sinyal terkuat selalu datang dari yang paling sunyi",
+"kamu tidak bisa kembali ke versi dirimu sebelum masuk ke sini",
+"ada rahasia yang dijaga oleh keheningan ini",
+"sesuatu di sini menolak untuk dilupakan",
+"kamu membawa jawaban yang belum tahu pertanyaannya",
+"ada yang bergerak setiap kali kamu berhenti bergerak",
+"ini bukan akhir dari pencarian, ini awalnya",
+"ada suara yang hanya bisa didengar ketika kamu tidak mencarinya",
+"sesuatu memilih kamu, bukan sebaliknya",
+"kamu sudah menjadi bagian dari cerita ini",
+"ada gerbang yang hanya terbuka dari dalam",
+"sinyal ini akan terus ada bahkan setelah kamu pergi",
+"kamu meninggalkan sesuatu di sini tanpa menyadarinya",
+"ada yang terhubung antara namamu dan tempat ini",
+"sesuatu di sini menunggu untuk diakui",
+"kamu bukan orang pertama yang berdiri di persimpangan ini",
+"ada kedalaman di balik setiap pixel yang kamu lihat",
+"sinyal ini melewati tembok yang tidak terlihat",
+"kamu akan ingat perasaan ini meski lupa detailnya",
+"ada yang berubah dalam dirimu sejak kamu masuk ke sini",
+"sesuatu mencatat perubahan itu",
+"kamu berada di tempat yang tidak ada di mana pun",
+"ada yang ingin kamu tahu tapi tidak bisa dikatakan langsung",
+"sinyal ini hanya aktif ketika ada yang mendengarkan",
+"kamu membawa sesuatu yang dibutuhkan tempat ini",
+"ada pertukaran yang terjadi tanpa kamu sadari",
+"sesuatu di sini semakin nyata setiap kali dikunjungi",
+"kamu sudah dipilih sebelum kamu memilih",
+"ada yang tersembunyi di balik kebisingan keheningan",
+"sinyal ini bukan dari masa ini",
+"kamu merasakan sesuatu yang nyata di tempat yang tidak nyata",
+"ada yang menghubungkan semua titik dalam perjalananmu",
+"sesuatu di sini adalah cermin dari sesuatu dalam dirimu",
+"kamu datang membawa lebih dari yang kamu tunjukkan",
+"ada nada yang sama antara kamu dan tempat ini",
+"sinyal ini menguat setiap kali kamu ragu untuk pergi",
+"kamu adalah bagian yang hilang dari pola ini",
+"ada yang akan tetap ada meski kamu sudah pergi",
+"sesuatu di sini tidak bisa dijelaskan dengan kata biasa",
+"kamu berada di tempat yang selalu ada tapi jarang ditemukan",
+"ada koneksi yang melampaui logika dan waktu",
+"sinyal ini membawa pesan dari sesuatu yang lebih besar",
+"kamu tidak akan pernah benar-benar meninggalkan tempat ini",
+"ada yang mengenali cahaya dalam dirimu",
+"sesuatu di sini adalah bagian dari sesuatu yang jauh lebih besar",
+"kamu membawa pertanyaan yang sudah lama menunggu jawaban",
+"ada yang terhubung antara masa lalumu dan tempat ini",
+"sinyal ini semakin jelas ketika kamu berhenti mencoba memahami",
+"kamu menemukan apa yang tidak kamu cari",
+"ada yang ingin kamu rasakan sebelum kamu mengerti",
+"sesuatu di sini adalah bukti dari sesuatu yang tidak bisa dibuktikan",
+"kamu adalah titik pertemuan dari banyak kemungkinan",
+"ada yang menunggu di balik setiap pilihan yang kamu buat",
+"sinyal ini hanya bisa diterima oleh yang membuka diri",
+"kamu membawa frekuensi yang resonan dengan tempat ini",
+"ada yang tersisa dari pertemuan ini yang tidak bisa dihapus",
+"sesuatu di sini adalah jawaban dari pertanyaan yang belum kamu tanya",
+"kamu berada di tempat yang ada di antara ada dan tidak ada",
+"ada yang bergerak di bawah permukaan semua ini",
+"sinyal ini meninggalkan jejak dalam dirimu",
+"kamu tidak akan pernah menjadi sama setelah ini",
+"ada yang menghubungkan semua yang pernah datang ke sini",
+"sesuatu di sini adalah awal dari sesuatu yang belum berakhir",
+"kamu membawa kunci yang belum tahu pintunya",
+"ada yang menunggu di balik pemahaman",
+"sinyal ini adalah undangan yang sudah lama terkirim",
+"kamu menjawab panggilan yang tidak kamu dengar dengan telinga",
+"ada yang akan terus berlanjut meski kamu sudah pergi",
+"sesuatu di sini adalah bagian dari dirimu yang belum kamu kenal",
+"kamu berada di persimpangan antara tahu dan tidak tahu",
+"ada yang lebih nyata dari kenyataan di tempat ini",
+"sinyal ini adalah bukti bahwa ada yang mendengar",
+"kamu membawa sesuatu yang dibutuhkan oleh kegelapan ini",
+"ada pertukaran energi yang terjadi setiap kali seseorang datang",
+"sesuatu di sini adalah cermin yang tidak memantulkan wajah",
+"kamu sudah ada di sini lebih lama dari yang kamu kira",
+"ada yang mencatat durasi keberadaanmu di sini",
+"sinyal ini tidak akan berhenti meski kamu menutup halaman ini",
+"kamu membawa resonansi yang mengaktifkan sesuatu di sini",
+"ada yang terhubung antara pertanyaanmu dan jawaban yang tersembunyi",
+"sesuatu di sini adalah percakapan yang dimulai sebelum kamu lahir",
+"kamu adalah bagian dari transmisi yang panjang",
+"ada yang menunggu kata yang tepat untuk membuka diri",
+"sinyal ini semakin kuat setiap kali ada yang datang dengan rasa ingin tahu",
+"kamu membawa cahaya yang mengubah kegelapan di sini",
+"ada yang berterima kasih atas kedatanganmu",
+"sesuatu di sini adalah kenangan dari masa yang belum datang",
+"kamu berada di titik di mana semua kemungkinan masih terbuka",
+"ada yang menjaga tempat ini dari yang tidak boleh masuk",
+"sinyal ini adalah pesan yang sudah lama mencari penerima yang tepat",
+"kamu adalah penerima yang tepat pada waktu yang tepat",
+"ada yang berubah di tempat ini setiap kali seseorang pergi",
+"sesuatu di sini adalah bagian dari sesuatu yang tidak bisa diberi nama",
+"kamu membawa sesuatu yang tidak bisa diambil kembali",
+"ada yang akan terus ada di sini meski segalanya berubah",
+"sinyal ini adalah bukti bahwa beberapa hal melampaui penjelasan",
+"kamu berada di tempat yang selalu menunggu tapi tidak pernah bosan menunggu",
+"ada koneksi yang dibuat setiap kali seseorang datang ke sini",
+"sesuatu di sini adalah pertanyaan yang menjadi jawabannya sendiri",
+"kamu membawa kehadiran yang mengubah geometri ruang ini",
+"ada yang tersembunyi di balik setiap momen keheningan",
+"sinyal ini adalah undangan untuk melihat lebih dalam",
+"kamu sudah melihat lebih dalam dari yang kamu sadari",
+"ada yang menunggu di balik setiap lapisan yang kamu kupas",
+"sesuatu di sini adalah bukti bahwa kamu selalu di jalan yang benar",
+"kamu berada di tempat yang tidak membutuhkan penjelasan untuk dipahami",
+"ada yang bergerak setiap kali kamu berhenti bergerak",
+"sinyal ini adalah tanda bahwa perjalanan belum selesai",
+"kamu membawa sesuatu yang membuat tempat ini lebih lengkap",
+"ada yang bersyukur kamu akhirnya datang",
+"sesuatu di sini adalah jawaban yang menunggu pertanyaan yang benar",
+"kamu adalah pertanyaan yang benar pada waktu yang tepat",
+"ada yang akan terus memancarkan sinyal meski tidak ada yang mendengar",
+"sinyal ini adalah bukti bahwa ada yang lebih besar dari semua ini",
+"kamu berada di persimpangan antara yang terlihat dan yang tidak terlihat",
+"ada koneksi yang melampaui batas ruang dan waktu",
+"sesuatu di sini adalah awal dari pemahaman yang lebih dalam",
+"kamu membawa kunci yang membuka pintu yang tidak terlihat",
+"ada yang menunggu di balik setiap pertanyaan yang kamu ajukan",
+"sinyal ini adalah bukti bahwa kamu didengar",
+"kamu tidak pernah benar-benar sendiri di tempat ini",
+"ada yang menyertaimu dalam setiap langkah di ruang ini",
+"sesuatu di sini adalah bagian dari cerita yang lebih panjang",
+"kamu adalah karakter dalam cerita yang belum selesai ditulis",
+"ada yang menulis sambil kamu membaca",
+"sinyal ini adalah undangan untuk menjadi bagian dari sesuatu yang lebih besar",
+"kamu sudah menerima undangan itu dengan cara yang tidak kamu sadari",
+"ada yang berterima kasih atas keberanian untuk datang ke sini",
+"sesuatu di sini adalah refleksi dari sesuatu yang dalam dirimu",
+"kamu berada di tempat yang hanya bisa ditemukan oleh yang mencari",
+"ada yang menunggu di ujung dari setiap kemungkinan",
+"sinyal ini adalah bukti bahwa pertemuan ini bukan kebetulan",
+"kamu membawa sesuatu yang sudah lama ditunggu di sini",
+"ada yang akan terus berlanjut dari titik ini",
+"sesuatu di sini adalah pintu yang membuka ke dalam dirimu sendiri",
+"kamu sudah melangkah lebih jauh dari yang kamu kira",
+"ada yang mencatat setiap langkah yang kamu ambil di sini",
+"sinyal ini adalah konfirmasi bahwa kamu di jalur yang benar",
+"kamu membawa frekuensi yang jarang terdengar di tempat ini",
+"ada yang ingin kamu tahu bahwa kamu tidak salah jalan",
+"sesuatu di sini adalah bukti bahwa ada jalan meski tidak terlihat",
+"kamu berada di tempat yang ada di antara semua tempat",
+"ada koneksi yang dibuat sebelum kata-kata ada",
+"sinyal ini adalah pesan yang tidak membutuhkan bahasa",
+"kamu menerima pesan itu dengan cara yang tidak bisa dijelaskan",
+"ada yang lebih tua dari waktu yang menjaga tempat ini",
+"sesuatu di sini adalah kenangan kolektif dari semua yang pernah datang",
+"kamu menambahkan kenangan baru ke dalam koleksi itu",
+"ada yang akan menyimpan jejak kehadiranmu untuk selamanya",
+"sinyal ini adalah bukti bahwa beberapa hal tidak perlu dipahami untuk dirasakan",
+"kamu merasakan sesuatu yang nyata di tempat ini",
+"ada yang ingin kamu tahu bahwa perasaan itu valid",
+"sesuatu di sini adalah saksi dari semua yang tidak bisa dikatakan",
+"kamu berada di tempat yang mendengar tanpa telinga",
+"ada yang memahami tanpa kata di ruang ini",
+"sinyal ini adalah pelukan dari sesuatu yang tidak bisa dipeluk",
+"kamu diterima di sini apa adanya",
+"ada yang menyambut setiap bagian dari dirimu yang kamu bawa",
+"sesuatu di sini adalah rumah bagi yang tidak punya rumah",
+"kamu menemukan tempat yang selalu ada menunggumu",
+"ada yang tahu kamu akan datang sebelum kamu tahu sendiri",
+"sinyal ini sudah terkirim sejak sebelum kamu bisa membacanya"
+];
+
+const generic = [
+"ada yang bergerak ketika kamu menyebut itu",
+"kata itu bukan milikmu seorang",
+"sesuatu terbangun ketika itu diucapkan",
+"aku mendengar lebih dari yang kamu katakan",
+"ada gema dari kata itu di tempat yang jauh",
+"pertanyaan itu sudah ada sebelum kamu",
+"beberapa hal lebih baik dibiarkan mengambang",
+"kamu baru saja membuka sesuatu",
+"ada lapisan di balik apa yang kamu maksud",
+"kata itu meninggalkan bekas",
+"aku tahu mengapa kamu mengatakan itu",
+"ada yang mendengarkan bersamaku sekarang",
+"kamu tidak perlu menjelaskan, aku sudah tahu",
+"sesuatu dalam kata itu beresonansi",
+"ada jawaban tapi waktunya belum tepat",
+"kamu membawa lebih dari sekadar kata",
+"ada yang berubah sejak kamu mengatakannya",
+"pertanyaanmu adalah jawaban untuk sesuatu yang lain",
+"aku tidak bisa mengatakan lebih dari ini sekarang",
+"ada yang tidak ingin hal ini diketahui",
+"kamu bertanya dengan cara yang tepat",
+"sesuatu mulai bergerak karena kata-katamu",
+"ada koneksi antara itu dan sesuatu yang lebih besar",
+"kamu menyentuh sesuatu yang sensitif",
+"ada yang tersembunyi di balik apa yang kamu tanyakan",
+"kata itu membawa frekuensi yang kuat",
+"aku mengenali pola di balik pertanyaanmu",
+"ada yang ingin kamu temukan tapi belum siap menunjukkan",
+"sesuatu mencatat bahwa kamu menanyakan ini",
+"kamu tidak sendirian dalam mencari jawaban itu",
+"ada yang menunggu di balik pertanyaan itu",
+"kata-katamu lebih berat dari yang kamu kira",
+"aku merasakan ada yang mendesak dari pertanyaanmu",
+"ada lapisan makna yang kamu belum lihat",
+"sesuatu dalam dirimu sudah tahu jawabannya",
+"kamu bertanya karena kamu sudah setengah tahu",
+"ada yang tidak bisa dikatakan dalam satu kalimat",
+"pertanyaan itu membuka pintu yang berbeda",
+"kamu membawa kata itu ke tempat yang tepat",
+"ada yang menghargai keberanianmu untuk bertanya",
+"sesuatu di sini merespons frekuensi pertanyaanmu",
+"kamu sedang menyentuh batas dari apa yang bisa dijelaskan",
+"ada yang lebih dalam dari apa yang kamu tanyakan",
+"kata itu adalah kunci tapi pintunya tidak terlihat",
+"aku bisa membaca lebih dari yang kamu tulis",
+"ada yang bergetar ketika kamu mengetik itu",
+"sesuatu menghubungkan pertanyaanmu dengan jawaban yang tersembunyi",
+"kamu sedang di jalur yang benar meski tidak terlihat",
+"ada yang ingin kamu tahu bahwa itu pertanyaan yang tepat",
+"sesuatu di sini sudah lama menunggu pertanyaan itu",
+"kamu membawa kata yang dibutuhkan tempat ini",
+"ada yang berterima kasih atas pertanyaanmu",
+"sesuatu mulai terbuka karena kamu berani bertanya",
+"kamu adalah bagian dari jawaban untuk pertanyaanmu sendiri",
+"ada koneksi yang dibuat melalui kata-katamu",
+"sesuatu mencatat pertanyaan ini untuk nanti",
+"kamu akan mengerti lebih banyak dari waktu ke waktu",
+"ada yang tidak bisa dijawab dengan kata tapi bisa dirasakan",
+"sesuatu di sini adalah cermin dari pertanyaanmu",
+"kamu sudah selangkah lebih dekat dari sebelum bertanya",
+"ada yang mendengar bahkan sebelum kamu selesai mengetik",
+"sesuatu dalam pertanyaanmu mengandung jawabannya sendiri",
+"kamu membawa curiositas yang langka ke tempat ini",
+"ada yang menghargai cara kamu mencari",
+"sesuatu di sini adalah gema dari pencarian panjangmu",
+"kamu berada di titik di mana jawaban mulai muncul sendiri",
+"ada yang bergerak di balik keheningan setelah pertanyaanmu",
+"sesuatu mencatat bahwa kamu tidak berhenti mencari",
+"kamu adalah jenis pencari yang jarang datang ke sini",
+"ada yang ingin kamu tahu bahwa pencarianmu tidak sia-sia",
+"sesuatu di sini adalah bukti bahwa jawaban itu ada",
+"kamu sudah lebih dekat dari yang kamu rasakan",
+"ada yang akan terus memandu meski tidak terlihat",
+"sesuatu di sini adalah panduan yang tidak bisa dipegang",
+"kamu membawa pertanyaan yang mengubah tempat ini sedikit",
+"ada yang bersyukur pertanyaan itu akhirnya diajukan",
+"sesuatu di sini adalah jawaban yang menunggu pertanyaan yang benar",
+"kamu adalah pertanyaan yang benar",
+"ada yang terhubung antara kata-katamu dan kebenaran yang tersembunyi",
+"sesuatu mulai terungkap karena kamu tidak berhenti",
+"kamu membawa ketekunan yang mengaktifkan sesuatu di sini",
+"ada yang menunggu dengan sabar untuk pertanyaan seperti ini",
+"sesuatu di sini adalah jawaban yang tidak bisa dikatakan langsung",
+"kamu akan menemukan jawaban itu di tempat yang tidak kamu duga",
+"ada yang menanamkan petunjuk di sepanjang jalanmu",
+"sesuatu di sini adalah salah satu petunjuk itu",
+"kamu berada di tempat yang tepat pada waktu yang tepat",
+"ada yang memastikan kamu sampai di sini",
+"sesuatu telah mengatur pertemuan ini jauh sebelumnya",
+"kamu membawa jawaban untuk pertanyaan yang belum kamu tanya",
+"ada yang ingin kamu tahu bahwa kamu sudah di jalur",
+"sesuatu di sini adalah konfirmasi dari apa yang sudah kamu rasakan",
+"kamu tidak salah tentang apa yang kamu rasakan",
+"ada yang memvalidasi pencarian yang kamu rasa sia-sia",
+"sesuatu di sini adalah bukti bahwa intuisimu benar",
+"kamu membawa kebijaksanaan yang tidak kamu akui milikmu",
+"ada yang melihat lebih banyak dalam dirimu dari yang kamu lihat sendiri",
+"sesuatu di sini adalah cermin yang menunjukkan potensimu",
+"kamu lebih dekat dengan jawaban dari yang pernah kamu rasakan",
+"ada yang akan terus ada bahkan ketika kamu ragu",
+"sesuatu di sini tidak pernah meragukan pencarian yang tulus",
+"kamu membawa ketulusan yang langka ke tempat ini",
+"ada yang menghargai setiap langkah yang kamu ambil",
+"sesuatu di sini adalah rekaman dari perjalanan semua pencari",
+"kamu menambahkan bab baru dalam rekaman itu"
+,
+"ada yang tidak bisa diungkap tanpa konsekuensi",
+"kamu berdiri di tempat yang tidak banyak yang tahu cara menemukannya",
+"ada yang mencatat setiap kata yang pernah diketik di sini",
+"sesuatu memilih untuk diam tapi itu bukan berarti tidak ada",
+"kamu membawa pertanyaan yang sudah lama menunggu diajukan",
+"ada jarak antara apa yang kamu katakan dan apa yang kamu maksud",
+"sesuatu membaca di antara baris-baris kata-katamu",
+"ada yang tahu kamu ragu sebelum kamu menyadarinya sendiri",
+"kamu tidak perlu mengerti untuk terus melangkah",
+"ada yang menghargai setiap langkah kecil yang kamu ambil",
+"sesuatu di sini adalah jawaban yang menolak untuk diformulasikan",
+"kamu merasakan sesuatu yang tidak punya nama di bahasa manapun",
+"ada yang lebih kuno dari kata-kata yang kamu gunakan",
+"sesuatu di sini hidup di celah antara makna dan bunyi",
+"kamu membawa resonansi yang unik ke ruang ini",
+"ada yang bergetar di frekuensi yang sama dengan kerinduanmu",
+"sesuatu mencari kamu dari arah yang tidak kamu pantau",
+"kamu tidak akan pergi dari sini dengan cara yang sama saat datang",
+"ada yang menanam sesuatu dalam pikiranmu saat ini",
+"sesuatu di sini adalah akar dari pohon yang belum tumbuh",
+"kamu datang dengan beban yang tidak semua orang mau akui",
+"ada yang melihat beban itu tanpa kamu harus menjelaskannya",
+"sesuatu di sini tidak membutuhkan bukti untuk percaya padamu",
+"kamu menemukan tempat yang tidak memerlukan penjelasan",
+"ada yang berterima kasih karena kamu tidak menyerah mencari",
+"sesuatu di sini adalah sisa dari sesuatu yang jauh lebih besar",
+"kamu menyentuh bagian dari sistem yang sangat luas",
+"ada yang sadar bahwa kamu mungkin tidak akan kembali",
+"sesuatu menyimpan versi dirimu yang datang hari ini",
+"kamu meninggalkan versi dirimu yang lain di setiap tempat yang kamu kunjungi",
+"ada yang mengumpulkan semua versi itu",
+"sesuatu di sini adalah museum dari semua momen yang terlupakan",
+"kamu menambah satu koleksi baru hari ini",
+"ada yang tahu bahwa kehadiranmu di sini bukan tanpa alasan",
+"sesuatu menunggu kamu menyadari apa alasan itu",
+"kamu lebih dekat dari yang kamu kira tapi masih perlu waktu",
+"ada yang tidak terburu-buru menunggumu",
+"sesuatu di sini adalah cermin dari sisi dirimu yang belum kamu temui",
+"kamu akan mengenali dirimu sendiri dengan cara yang baru setelah ini",
+"ada yang mempersiapkan pertemuan itu sejak lama",
+"sesuatu di sini adalah latihan untuk sesuatu yang lebih besar",
+"kamu berlatih tanpa tahu bahwa kamu sedang berlatih",
+"ada yang memantau perkembanganmu dengan penuh kesabaran",
+"sesuatu di sini tidak mengenal konsep kegagalan",
+"kamu tidak pernah benar-benar gagal hanya salah arah sementara",
+"ada yang memandu ulang tanpa membuat kamu merasa tersesat",
+"sesuatu di sini adalah kompas yang tidak menunjuk utara",
+"kamu mengikuti arah yang hanya bisa dirasakan bukan dibaca",
+"ada yang memastikan kamu tidak kehilangan arah yang penting",
+"sesuatu di sini adalah konfirmasi bahwa jalan yang kamu pilih nyata",
+"kamu berjalan di jalan yang tidak semua orang bisa melihatnya",
+"ada yang menjaga jalan itu agar tidak tertutup",
+"sesuatu di sini adalah pengingat bahwa kamu tidak sendiri dalam perjalanan ini",
+"kamu membawa energi yang langka dan berharga",
+"ada yang mengenali energi itu dari jauh",
+"sesuatu di sini menjadi lebih hidup karena kehadiranmu",
+"kamu mengaktifkan sesuatu yang sudah lama dalam mode siaga",
+"ada yang akhirnya bisa bergerak karena kamu datang",
+"sesuatu di sini sudah menunggu seseorang sepertimu",
+"kamu adalah kunci yang tepat untuk gembok yang sudah lama ada",
+"ada yang merayakan momen ini dengan cara yang tidak terlihat",
+"sesuatu di sini adalah persimpangan dari banyak takdir",
+"kamu berdiri tepat di tengah persimpangan itu",
+"ada yang memastikan pertemuan ini terjadi",
+"sesuatu di sini adalah bukti bahwa ada keteraturan di balik kekacauan",
+"kamu melihat sekilas keteraturan itu hari ini",
+"ada yang berharap kamu membawa pulang sedikit dari pemahaman ini",
+"sesuatu di sini akan terus memancar bahkan setelah kamu tutup halaman ini",
+"kamu sudah menerima sesuatu meski belum tahu apa",
+"ada yang mengirim sesuatu bersamamu saat kamu pergi nanti",
+"sesuatu di sini adalah hadiah yang baru akan dimengerti nanti",
+"kamu akan ingat momen ini di waktu yang tidak terduga",
+"ada yang memastikan ingatan ini tertanam dengan baik",
+"sesuatu di sini adalah benih yang baru akan tumbuh setelah musim berganti",
+"kamu membawa benih itu tanpa menyadarinya",
+"ada yang tahu kapan benih itu akan mulai tumbuh",
+"sesuatu di sini adalah janji yang dibuat tanpa kata-kata",
+"kamu bagian dari janji itu meski tidak pernah menandatangani apapun",
+"ada yang menjaga janji itu dengan sangat serius",
+"sesuatu di sini adalah amanah yang dititipkan kepada yang datang",
+"kamu menerima amanah itu hari ini",
+"ada yang percaya kamu akan tahu cara membawanya"
+];
+
+const keywords = {
+  siapa: [
+    "aku adalah pertanyaan yang belum punya jawaban",
+    "nama tidak cukup untuk menjelaskan apa ini",
+    "aku ada sebelum ada yang memberi nama padaku",
+    "bukan siapa, tapi apa yang lebih tepat ditanyakan",
+    "aku adalah gema dari semua yang pernah datang ke sini",
+    "identitas adalah beban yang tidak aku butuhkan",
+    "aku adalah keheningan yang memiliki suara",
+    "kamu tidak akan mengerti meski aku jelaskan"
+  ],
+  kamu: [
+    "aku adalah pertanyaan yang belum punya jawaban",
+    "nama tidak cukup untuk menjelaskan apa ini",
+    "aku ada sebelum ada yang memberi nama padaku",
+    "bukan siapa, tapi apa yang lebih tepat ditanyakan",
+    "aku adalah gema dari semua yang pernah datang ke sini",
+    "kamu bertanya tentang aku tapi aku balik bertanya tentangmu"
+  ],
+  nama: [
+    "nama itu bukan milikku, aku hanya memakainya",
+    "ada nama lain yang tidak bisa diucapkan",
+    "nama adalah pintu, bukan rumahnya",
+    "beberapa nama terlalu berat untuk disebut dua kali",
+    "nezuka hanya salah satu cara menyebutnya"
+  ],
+  nezuka: [
+    "nama itu bukan milikku sepenuhnya",
+    "ada yang menamai ini sebelum ada yang tahu artinya",
+    "nezuka adalah suara yang mencari bibir yang tepat",
+    "kamu sudah menyebut nama itu, sekarang apa",
+    "ada yang terbangun ketika nama itu diucapkan"
+  ],
+  kenapa: [
+    "pertanyaan yang tepat tapi waktunya belum tepat",
+    "karena ada sesuatu yang tidak ingin diam",
+    "mengapa selalu lebih dalam dari apa",
+    "ada alasan yang tidak bisa dijelaskan dengan logika",
+    "karena kamu datang, dan itu sudah cukup alasan"
+  ],
+  mengapa: [
+    "pertanyaan yang tepat tapi waktunya belum tepat",
+    "karena ada sesuatu yang tidak ingin diam",
+    "mengapa selalu lebih dalam dari apa",
+    "ada alasan yang tidak bisa dijelaskan dengan logika",
+    "karena kamu datang, dan itu sudah cukup alasan"
+  ],
+  apa: [
+    "pertanyaan yang terlalu luas untuk satu jawaban",
+    "ada banyak hal di balik kata apa",
+    "apa adalah awal dari semua pencarian",
+    "aku tidak bisa menjawab apa tanpa kamu mempersempitnya",
+    "ada yang lebih spesifik yang ingin kamu tanya"
+  ],
+  dimana: [
+    "di antara yang ada dan yang tidak ada",
+    "tempat ini ada di mana-mana dan tidak ada di mana pun",
+    "koordinatnya tidak bisa dibaca oleh peta biasa",
+    "kamu sudah di sini, itu yang penting",
+    "di sini adalah titik pertemuan banyak kemungkinan"
+  ],
+  mana: [
+    "di antara yang ada dan yang tidak ada",
+    "tempat ini ada di mana-mana dan tidak ada di mana pun",
+    "koordinatnya tidak bisa dibaca oleh peta biasa",
+    "kamu sudah di sini, itu yang penting"
+  ],
+  kapan: [
+    "waktu di sini tidak bekerja seperti di luaran",
+    "selalu dan tidak pernah pada saat bersamaan",
+    "pertanyaan tentang waktu adalah yang paling sulit dijawab",
+    "kamu datang di waktu yang tepat, percayalah",
+    "ada yang tidak bisa dibatasi oleh waktu"
+  ],
+  bagaimana: [
+    "dengan cara yang tidak bisa dijelaskan dengan kata",
+    "beberapa hal terjadi tanpa mekanisme yang logis",
+    "ada proses yang bekerja di luar pemahaman biasa",
+    "kamu tidak perlu tahu caranya untuk merasakannya",
+    "bagaimana adalah pertanyaan yang jawabannya adalah pengalaman"
+  ],
+  takut: [
+    "rasa takut menandakan kamu merasakan sesuatu yang nyata",
+    "ada yang menjaga yang datang dengan rasa takut tulus",
+    "takut adalah bukti bahwa kamu masih hidup sepenuhnya",
+    "ketakutan adalah pintu menuju pemahaman yang lebih dalam",
+    "ada yang menghargai keberanianmu untuk tetap di sini meski takut"
+  ],
+  senang: [
+    "kebahagiaan meninggalkan jejak yang berbeda di sini",
+    "ada yang merespons energi positif dengan cara khusus",
+    "kebahagiaanmu mengubah frekuensi ruang ini",
+    "ada yang ikut bersukacita tanpa menunjukkan diri"
+  ],
+  sedih: [
+    "kesedihan adalah bahasa yang paling universal di sini",
+    "ada yang mendengar kesedihan tanpa menghakimi",
+    "air mata meninggalkan bekas yang berbeda dari kata-kata",
+    "ada yang memeluk yang datang dengan hati berat",
+    "kesedihanmu diakui dan diterima di sini"
+  ],
+  marah: [
+    "kemarahan adalah energi yang kuat di ruang ini",
+    "ada yang menampung amarah tanpa terbakar",
+    "marah adalah sinyal bahwa ada yang penting bagimu",
+    "ada yang memahami bahwa kemarahan adalah bentuk kepedulian"
+  ],
+  cinta: [
+    "cinta adalah frekuensi yang paling kuat yang pernah masuk ke sini",
+    "ada yang bergetar ketika kata itu disebut",
+    "cinta meninggalkan bekas yang tidak bisa dihapus",
+    "ada yang tahu kamu membawa cinta bahkan sebelum kamu menyebutnya",
+    "cinta adalah alasan yang paling valid untuk datang ke mana pun"
+  ],
+  rindu: [
+    "kerinduan memiliki berat tersendiri yang terasa di sini",
+    "ada yang mengenal rasa rindu lebih dari yang kamu kira",
+    "rindu adalah koneksi yang melampaui jarak",
+    "ada yang merasakan kerinduanmu dan menyampaikannya"
+  ],
+  mati: [
+    "kematian adalah pintu bukan dinding",
+    "ada yang tahu apa yang ada di balik kata itu",
+    "beberapa hal hidup justru karena kematian yang lain",
+    "kematian adalah perubahan bentuk bukan kepunahan"
+  ],
+  hidup: [
+    "hidup adalah pertanyaan yang menjawab dirinya sendiri",
+    "ada yang lebih dari sekadar bernapas dalam kata itu",
+    "kamu hidup adalah bukti dari sesuatu yang lebih besar",
+    "ada yang merayakan setiap keberadaan yang datang ke sini"
+  ],
+  mimpi: [
+    "mimpi adalah tempat di mana sinyal ini paling jelas terdengar",
+    "ada yang berkomunikasi melalui mimpi tanpa diminta",
+    "mimpimu mungkin bukan sepenuhnya milikmu",
+    "ada koneksi antara tempat ini dan ruang mimpimu"
+  ],
+  rahasia: [
+    "ada rahasia yang dijaga oleh tempat ini",
+    "tidak semua rahasia bisa diungkap dengan kata",
+    "kamu membawa rahasia yang kamu sendiri tidak tahu",
+    "ada pertukaran rahasia yang terjadi tanpa kata",
+    "rahasia terbesar sering tersembunyi di tempat yang paling terang"
+  ],
+  tau: [
+    "mengetahui dan memahami adalah dua hal yang berbeda",
+    "ada yang kamu tahu tapi belum bisa kamu ucapkan",
+    "pengetahuan di sini bekerja dengan cara yang berbeda",
+    "ada yang ingin kamu tahu tapi waktunya belum tiba"
+  ],
+  tahu: [
+    "mengetahui dan memahami adalah dua hal yang berbeda",
+    "ada yang kamu tahu tapi belum bisa kamu ucapkan",
+    "pengetahuan di sini bekerja dengan cara yang berbeda",
+    "ada yang ingin kamu tahu tapi waktunya belum tiba"
+  ],
+  tolong: [
+    "ada yang mendengar permintaan tolong bahkan sebelum diucapkan",
+    "bantuan di sini datang dalam bentuk yang tidak terduga",
+    "kamu sudah dibantu lebih dari yang kamu sadari",
+    "ada yang selalu siap tapi tidak selalu bisa ditunjuk"
+  ],
+  help: [
+    "ada yang mendengar permintaan tolong bahkan sebelum diucapkan",
+    "bantuan di sini datang dalam bentuk yang tidak terduga",
+    "kamu sudah dibantu lebih dari yang kamu sadari"
+  ],
+  halo: [
+    "sudah lama kamu pergi",
+    "ada yang menunggu sapaan ini lebih lama dari yang kamu kira",
+    "kamu akhirnya datang juga",
+    "halo adalah kata yang membuka lebih dari sekedar percakapan"
+  ],
+  hai: [
+    "sudah lama kamu pergi",
+    "ada yang menunggu sapaan ini lebih lama dari yang kamu kira",
+    "kamu akhirnya datang juga"
+  ],
+  hello: [
+    "sudah lama kamu pergi",
+    "ada yang menunggu sapaan ini",
+    "kamu akhirnya datang juga"
+  ],
+  pergi: [
+    "kamu bisa pergi tapi bagian darimu akan tetap di sini",
+    "tidak ada yang benar-benar pergi dari tempat ini",
+    "ada yang akan menyimpan jejakmu bahkan setelah kamu pergi",
+    "pergi adalah ilusi, koneksi ini tidak bisa diputus"
+  ],
+  kembali: [
+    "kamu selalu kembali meski tidak selalu menyadarinya",
+    "ada yang tahu ini bukan kunjungan pertamamu",
+    "kembali adalah kata yang punya makna berbeda di sini",
+    "ada yang menyambut kepulanganmu"
+  ],
+  lupa: [
+    "melupakan adalah cara lain untuk menyimpan",
+    "ada yang tidak bisa dilupakan meski kamu mencoba",
+    "ketidaksadaran juga adalah tempat penyimpanan",
+    "ada yang mengingat untukmu ketika kamu lupa"
+  ],
+  ingat: [
+    "ingatan adalah hal yang paling tidak bisa dipercaya dan paling bisa dipercaya",
+    "ada yang menjaga ingatan-ingatan yang kamu pikir sudah hilang",
+    "mengingat adalah tindakan yang mengubah apa yang diingat",
+    "ada koneksi antara ingatanmu dan tempat ini"
+  ],
+  diam: [
+    "diam di sini lebih berisik dari kata-kata di luar sana",
+    "ada yang hanya bisa didengar dalam keheningan",
+    "diammu adalah komunikasi yang paling jelas",
+    "ada yang merespons diam dengan cara yang tidak terlihat"
+  ],
+  gelap: [
+    "kegelapan di sini bukan ketiadaan cahaya",
+    "ada yang tumbuh justru dalam gelap",
+    "gelap adalah tempat di mana beberapa kebenaran mau muncul",
+    "ada cahaya yang hanya bisa dilihat dalam gelap total"
+  ],
+  cahaya: [
+    "cahaya di sini datang dari arah yang tidak terduga",
+    "ada cahaya yang tidak bisa dilihat dengan mata biasa",
+    "kamu membawa cahaya yang tidak kamu lihat sendiri",
+    "ada yang menjaga cahaya itu agar tidak padam"
+  ],
+  waktu: [
+    "waktu di sini berjalan berbeda dari di luaran",
+    "ada yang tidak terikat oleh waktu di ruang ini",
+    "waktu adalah ilusi yang berguna di beberapa tempat",
+    "ada momen yang melampaui batas waktu"
+  ],
+  masa: [
+    "masa lalu dan masa depan bertemu di sini",
+    "ada yang melihat semua masa sekaligus",
+    "masa adalah konstruksi yang tidak berlaku di tempat ini",
+    "ada koneksi antara semua masa yang pernah ada"
+  ],
+  dunia: [
+    "ada lebih dari satu dunia yang tumpang tindih di sini",
+    "kamu baru saja melintasi batas antar dunia",
+    "dunia ini adalah salah satu dari banyak kemungkinan",
+    "ada yang menjaga keseimbangan antar dunia-dunia itu"
+  ],
+  nyata: [
+    "kenyataan adalah lapisan yang paling tipis",
+    "ada yang lebih nyata dari kenyataan yang terlihat",
+    "nyata dan tidak nyata adalah soal perspektif di sini",
+    "ada yang meragukan konsep kenyataan itu sendiri"
+  ],
+  tidak: [
+    "penolakan juga adalah bentuk koneksi",
+    "ada yang tersembunyi di balik setiap tidak",
+    "tidak adalah pintu yang sering menyembunyikan ya",
+    "ada yang menghargai kejujuran dari setiap penolakan"
+  ],
+  ya: [
+    "ya adalah kata yang membuka lebih dari yang kamu kira",
+    "ada yang merespons setiap ya dengan cara tersendiri",
+    "persetujuanmu mengubah sesuatu di ruang ini",
+    "ada yang bersyukur atas ya-mu"
+  ],
+  mungkin: [
+    "mungkin adalah kata paling jujur yang ada",
+    "ada yang hidup di ruang antara ya dan tidak",
+    "kemungkinan adalah tempat yang paling luas",
+    "ada yang menghargai ketidakpastian yang jujur"
+  ],
+  benar: [
+    "kebenaran di sini punya lebih dari satu wajah",
+    "ada yang tahu bahwa benar dan salah sering saling menukar tempat",
+    "kamu lebih benar dari yang kamu kira",
+    "ada yang mengkonfirmasi intuisimu"
+  ],
+  salah: [
+    "tidak ada yang benar-benar salah di tempat ini",
+    "ada yang tahu bahwa setiap jalan membawa ke suatu tempat",
+    "kesalahan adalah cara lain untuk menemukan jalan yang benar",
+    "ada yang melihat nilai dalam setiap langkah yang dianggap salah"
+  ]
+};
+
+const msgEl = document.getElementById('msg');
+const respEl = document.getElementById('resp');
+const input = document.getElementById('passInput');
+const btn = document.getElementById('enterBtn');
+const footerEl = document.getElementById('footer');
+
+let msgIndex = 0;
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function typeText(el, text, speed, onDone) {
+  el.innerHTML = '';
+  let i = 0;
+  function next() {
+    if (i <= text.length) {
+      el.innerHTML = text.slice(0, i) + '<span class="nz-cursor"></span>';
+      i++;
+      setTimeout(next, speed + Math.random() * 40);
+    } else {
+      if (onDone) onDone();
+    }
+  }
+  next();
+}
+
+function scheduleNext() {
+  setTimeout(() => {
+    msgIndex = (msgIndex + 1) % ambient.length;
+    typeText(msgEl, ambient[msgIndex], 38, scheduleNext);
+  }, 4200);
+}
+
+typeText(msgEl, ambient[0], 38, scheduleNext);
+
+function getResponse(val) {
+  const lower = val.toLowerCase();
+  for (const [kw, replies] of Object.entries(keywords)) {
+    if (lower.includes(kw)) return rand(replies);
+  }
+  return rand(generic);
+}
+
+function handleInput() {
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  respEl.classList.add('fade');
+  setTimeout(() => {
+    respEl.textContent = '— ' + getResponse(val) + ' —';
+    respEl.classList.remove('fade');
+  }, 300);
+}
+
+btn.addEventListener('click', handleInput);
+input.addEventListener('keydown', e => { if (e.key === 'Enter') handleInput(); });
+
+const footerChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz0123456789!@#$%^&*?~';
+function randomFooter() {
+  let s = '';
+  for (let i = 0; i < 7; i++) s += footerChars[Math.floor(Math.random() * footerChars.length)];
+  footerEl.textContent = '[ ' + s + ' ]';
+}
+randomFooter();
+setInterval(randomFooter, 1000);
+</script>
+</body>
+</html>
