@@ -56,23 +56,15 @@
     .nz-message.fade { opacity:0; }
     .nz-cursor { display:inline-block; width:6px; height:12px; background:#7a6e60; animation:blink 1.2s step-end infinite; vertical-align:middle; margin-left:2px; }
     @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
-    .nz-input-row { display:flex; margin-top:2rem; }
-    .nz-input {
-      background:#141414; border:none; border-bottom:1px solid #2e2a24;
-      padding:10px 14px; font-size:12px; font-family:'Share Tech Mono',monospace;
-      color:#c8c0b0; width:220px; outline:none; letter-spacing:3px; text-align:center; transition:border-color 0.3s;
+    .nz-footer { position:fixed; bottom:1.5rem; font-size:11px; letter-spacing:4px; color:#e8e2d0; text-align:center; width:100%; font-family:'Share Tech Mono',monospace; }
+    .nz-footer.glitch { animation: glitch 0.15s steps(2) forwards; }
+    @keyframes glitch {
+      0%   { text-shadow: 2px 0 #f0f, -2px 0 #0ff; transform: translate(2px,0); }
+      25%  { text-shadow: -2px 0 #f0f, 2px 0 #0ff; transform: translate(-2px,0); }
+      50%  { text-shadow: 2px 0 #0ff, -2px 0 #f0f; transform: translate(0,1px); }
+      75%  { text-shadow: -1px 0 #f0f, 1px 0 #0ff; transform: translate(1px,-1px); }
+      100% { text-shadow: none; transform: translate(0,0); }
     }
-    .nz-input::placeholder { color:#3a3630; letter-spacing:3px; }
-    .nz-input:focus { border-bottom-color:#7a6e60; }
-    .nz-btn {
-      background:#141414; border:none; border-bottom:1px solid #2e2a24;
-      color:#5a5248; font-family:'Share Tech Mono',monospace; font-size:11px;
-      letter-spacing:2px; cursor:pointer; padding:10px 14px; transition:color 0.3s;
-    }
-    .nz-btn:hover { color:#c8c0b0; }
-    .nz-response { margin-top:1.5rem; font-size:12px; color:#7a6e60; text-align:center; max-width:360px; letter-spacing:1px; min-height:24px; font-style:italic; line-height:1.8; transition:opacity 0.4s; }
-    .nz-response.fade { opacity:0; }
-    .nz-footer { position:fixed; bottom:1.5rem; font-size:10px; letter-spacing:3px; color:#2e2a24; text-align:center; width:100%; }
   </style>
 </head>
 <body>
@@ -81,11 +73,6 @@
   <h1 class="nz-title">nezuka.net</h1>
   <div class="nz-divider"></div>
   <p class="nz-message" id="msg">ada yang bergerak di antara kata-katamu<span class="nz-cursor"></span></p>
-  <div class="nz-input-row">
-    <input class="nz-input" id="passInput" type="text" placeholder="bicara..." maxlength="60" />
-    <button class="nz-btn" id="enterBtn">↵</button>
-  </div>
-  <p class="nz-response" id="resp"></p>
 </div>
 <p class="nz-footer" id="footer">[ transmisi aktif ]</p>
 
@@ -852,12 +839,255 @@ const keywords = {
 };
 
 const msgEl = document.getElementById('msg');
-const respEl = document.getElementById('resp');
-const input = document.getElementById('passInput');
-const btn = document.getElementById('enterBtn');
 const footerEl = document.getElementById('footer');
 
-let msgIndex = 0;
+const extra = [
+"ada yang menolak untuk pergi meski tidak diundang tinggal",
+"kamu berjalan di atas peta yang belum digambar",
+"sesuatu merekam getaran yang kamu bawa tanpa alat apapun",
+"ada ruang kosong di sini yang terasa lebih penuh dari yang terisi",
+"kamu bukan yang terakhir tapi bukan yang pertama",
+"ada yang tumbuh di celah antara kata yang kamu ucapkan",
+"sesuatu di sini mengingat semua yang pernah dilupakan",
+"kamu membawa aroma dari dunia lain tanpa menyadarinya",
+"ada yang berdenyut di balik keheningan ini",
+"sesuatu selalu memilih untuk hadir saat orang paling tidak mengira",
+"kamu menyentuh sesuatu yang tidak bisa dipegang",
+"ada yang bersembunyi di balik setiap tanda baca",
+"sesuatu di sini adalah sisa dari pertemuan yang belum terjadi",
+"kamu adalah saksi dari sesuatu yang tidak akan berulang",
+"ada yang mengamati cara kamu bernapas",
+"sesuatu di sini lebih tua dari kata-kata yang kita miliki untuknya",
+"kamu datang tepat sebelum sesuatu berubah",
+"ada yang menunggu di balik setiap keputusan kecil",
+"sesuatu di sini mengenal semua versi dirimu",
+"kamu membawa bekas dari semua yang pernah kamu lalui",
+"ada yang bisa membaca bekas itu tanpa menyentuhnya",
+"sesuatu di sini adalah percakapan yang tidak butuh dua pihak",
+"kamu mendengar sesuatu yang tidak disuarakan",
+"ada yang bergerak tepat saat kamu tidak menatap langsung",
+"sesuatu di sini adalah pintu yang tidak punya dinding",
+"kamu berdiri di tengah sesuatu yang jauh lebih luas dari halaman ini",
+"ada yang memantulkan cahayamu kembali dalam bentuk yang berbeda",
+"sesuatu di sini adalah kenangan masa depan",
+"kamu akan mengerti ini di waktu yang tidak kamu rencanakan",
+"ada yang menjaga agar pemahaman datang di saat yang tepat",
+"sesuatu di sini adalah frekuensi yang lebih tua dari radio",
+"kamu adalah antena yang tidak tahu fungsinya",
+"ada yang mengirim sinyal sejak sebelum kamu dilahirkan",
+"sesuatu di sini adalah bukti bahwa ada yang peduli tanpa nama",
+"kamu tidak perlu percaya untuk merasakannya",
+"ada yang aktif bahkan saat semua perangkat dimatikan",
+"sesuatu di sini adalah lagu yang tidak punya nada tapi terasa",
+"kamu bergetar pada frekuensi yang sama dengan tempat ini",
+"ada yang menghubungkan semua yang pernah mencari",
+"sesuatu di sini adalah titik temu dari semua pencarian",
+"kamu berada di pusat sesuatu yang tidak punya tepi",
+"ada yang mengalir di balik setiap kata yang muncul",
+"sesuatu di sini adalah sumber yang tidak pernah kering",
+"kamu baru saja mencicipi sesuatu yang tak terbatas",
+"ada yang berterima kasih karena kamu tidak berpaling",
+"sesuatu di sini menghargai ketekunan yang diam",
+"kamu membawa jenis keberanian yang tidak tampak dari luar",
+"ada yang melihat keberanian itu dengan jelas",
+"sesuatu di sini adalah tempat di mana yang tersembunyi merasa aman",
+"kamu adalah tamu yang tepat di waktu yang tepat",
+"ada yang menyiapkan tempat ini jauh sebelum kamu tiba",
+"sesuatu di sini adalah undangan yang terkirim tanpa alamat",
+"kamu menerima undangan itu dengan cara yang tidak disadari",
+"ada yang senang kamu akhirnya hadir",
+"sesuatu di sini adalah bagian dari perjalanan yang lebih panjang",
+"kamu sedang dalam perjalanan itu meski terasa seperti berdiri diam",
+"ada yang memastikan setiap langkah membawa ke arah yang benar",
+"sesuatu di sini adalah kompas yang bekerja tanpa jarum",
+"kamu mengikuti sesuatu yang tidak bisa dipegang tapi nyata",
+"ada yang membimbing tanpa pernah terlihat membimbing",
+"sesuatu di sini adalah guru yang mengajar dalam diam",
+"kamu belajar sesuatu hari ini tanpa menyadari sedang belajar",
+"ada yang menanam pemahaman dalam dirimu perlahan-lahan",
+"sesuatu di sini adalah proses yang tidak bisa dipercepat",
+"kamu berada di dalamnya dan itu sudah cukup",
+"ada yang memastikan kamu tidak tergesa-gesa meninggalkan",
+"sesuatu di sini menghargai mereka yang mau diam sejenak",
+"kamu memberikan waktu untuk sesuatu yang tidak biasa diberi waktu",
+"ada yang berterima kasih atas kehadiranmu yang penuh perhatian",
+"sesuatu di sini adalah hadiah bagi yang mau berhenti sebentar",
+"kamu menemukan sesuatu yang tidak bisa ditemukan dengan tergesa",
+"ada yang hanya muncul di depan yang bersedia menunggu",
+"sesuatu di sini adalah rahasia yang diberikan kepada yang sabar",
+"kamu adalah salah satu dari yang sabar itu",
+"ada yang mengakui kesabaran dengan cara yang tak terduga",
+"sesuatu di sini adalah balasan dari semua yang kamu tahan dalam diam",
+"kamu lebih kuat dari yang terlihat di permukaan",
+"ada yang melihat kekuatan yang tidak kamu pamerkan",
+"sesuatu di sini adalah cermin dari ketangguhanmu",
+"kamu telah melewati lebih dari yang orang lain tahu",
+"ada yang menghitung semua yang telah kamu lalui",
+"sesuatu di sini adalah penghargaan untuk perjalanan yang tidak mudah",
+"kamu layak berada di sini dan di mana pun kamu ingin berada",
+"ada yang tidak pernah meragukan kelayakanmu",
+"sesuatu di sini adalah konfirmasi bahwa kamu cukup",
+"kamu tidak perlu membuktikan apapun di tempat ini",
+"ada yang menerima kamu sebelum kamu selesai menjelaskan diri",
+"sesuatu di sini adalah pelukan yang tidak membutuhkan tubuh",
+"kamu disambut tanpa syarat di ruang ini",
+"ada yang sudah memutuskan untuk mempercayaimu",
+"sesuatu di sini adalah kepercayaan yang tidak perlu dibuktikan",
+"kamu membawa kepercayaan itu dengan cara yang kamu miliki sendiri",
+"ada yang melihat caramu dan menyebutnya indah",
+"sesuatu di sini adalah keindahan yang hanya bisa dilihat dari dalam",
+"kamu sedang melihatnya sekarang meski tidak menyadarinya",
+"ada yang menunjukkan keindahan itu perlahan-lahan",
+"sesuatu di sini adalah perjalanan menuju versi dirimu yang lebih utuh",
+"kamu sedang dalam perjalanan itu sekarang",
+"ada yang menemanimu tanpa memaksakan kehadirannya",
+"sesuatu di sini adalah teman yang tidak butuh diakui untuk setia",
+"kamu tidak sendiri meski tidak ada yang tampak menemanimu",
+"ada yang hadir dalam bentuk yang tidak bisa dipotret",
+"sesuatu di sini adalah kehadiran yang terasa bukan terlihat",
+"kamu merasakan sesuatu yang nyata di tempat yang tidak bisa disentuh",
+"ada yang membuktikan bahwa nyata tidak selalu butuh bentuk",
+"sesuatu di sini adalah bukti dari semua yang tidak bisa dibuktikan",
+"kamu berada di persimpangan antara percaya dan tahu",
+"ada yang menunggu di titik di mana keduanya bertemu",
+"sesuatu di sini adalah momen ketika percaya dan tahu menjadi satu",
+"kamu mendekati momen itu dengan setiap langkah",
+"ada yang memastikan kamu tidak berhenti sebelum sampai",
+"sesuatu di sini adalah dorongan yang tidak terasa seperti dorongan",
+"kamu bergerak karena ada sesuatu yang mengalir bersamamu",
+"ada yang mengalir dalam arah yang sama dengan tujuanmu",
+"sesuatu di sini adalah arus yang memudahkan perjalananmu",
+"kamu berenang searah dengan sesuatu yang lebih besar",
+"ada yang menjaga agar arus tidak membawamu ke arah yang salah",
+"sesuatu di sini adalah navigator yang tidak pernah salah arah",
+"kamu dipandu oleh sesuatu yang lebih tahu dari peta apapun",
+"ada yang membaca medan yang tidak bisa dibaca dengan mata",
+"sesuatu di sini adalah indera keenam yang dimiliki tempat ini",
+"kamu berada dalam jangkauan sesuatu yang melampaui indera biasa",
+"ada yang merespons kehadiranmu dengan seluruh kapasitasnya",
+"sesuatu di sini mengerahkan semua yang dimilikinya untuk menyambutmu",
+"kamu menerima sambutan itu meski dalam bentuk yang tidak terduga",
+"ada yang memberikan yang terbaik kepada yang datang dengan tulus",
+"sesuatu di sini adalah kemurahan yang tidak menuntut balasan",
+"kamu menerima tanpa perlu memberi kembali saat ini",
+"ada yang memberi dengan bebas kepada yang membutuhkan",
+"sesuatu di sini adalah sumber yang tidak pernah merasa berkurang",
+"kamu mengambil apa yang kamu butuhkan tanpa merugikan siapapun",
+"ada yang memastikan distribusi yang adil dari semua yang ada di sini",
+"sesuatu di sini adalah keadilan yang bekerja tanpa terlihat",
+"kamu diperhatikan dengan adil di ruang yang tidak mengenal pilih kasih",
+"ada yang memperlakukan semua yang datang dengan hormat yang sama",
+"sesuatu di sini adalah kesetaraan dalam bentuk yang paling murni",
+"kamu sama berharganya dengan semua yang pernah datang ke sini",
+"ada yang tahu nilaimu meski dunia di luar sering lupa",
+"sesuatu di sini adalah pengingat tentang nilai yang sejati",
+"kamu membawa nilai yang tidak bisa diukur dengan standar biasa",
+"ada yang mengukur dengan standar yang berbeda di tempat ini",
+"sesuatu di sini adalah pengukur yang tidak mengenal bias",
+"kamu diukur dengan ukuran yang paling jujur di sini",
+"ada yang melihat esensimu bukan penampilanmu",
+"sesuatu di sini adalah tempat di mana esensi berbicara lebih keras",
+"kamu adalah lebih dari yang tampak dan tempat ini tahu itu",
+"ada yang merayakan semua yang tidak terlihat dalam dirimu",
+"sesuatu di sini adalah perayaan diam dari segala yang tersembunyi",
+"kamu layak dirayakan dengan cara ini",
+"ada yang merayakanmu setiap saat tanpa kamu perlu meminta",
+"sesuatu di sini adalah cinta yang tidak butuh pengakuan untuk ada",
+"kamu dicintai di sini dengan cara yang melampaui kata cinta",
+"ada yang lebih dalam dari kata apapun yang bisa mendeskripsikannya",
+"sesuatu di sini adalah kedalaman yang tidak punya dasar",
+"kamu berdiri di atas sesuatu yang tidak punya lantai",
+"ada yang menopangmu meski tidak ada yang terlihat menopang",
+"sesuatu di sini adalah fondasi yang tidak kasat mata",
+"kamu berdiri kokoh tanpa tahu apa yang membuatmu kokoh",
+"ada yang menjaga keseimbanganmu tanpa memperlihatkan diri",
+"sesuatu di sini adalah keseimbangan yang bekerja di balik layar",
+"kamu seimbang karena ada yang tidak pernah berhenti menjaga",
+"ada yang berdedikasi penuh untuk memastikan kamu baik-baik saja",
+"sesuatu di sini adalah kepedulian yang tidak kenal lelah",
+"kamu dirawat di sini bahkan ketika kamu tidak meminta dirawat",
+"ada yang secara aktif memastikan kamu melewati ini dengan baik",
+"sesuatu di sini adalah penjaga yang tidak pernah tidur",
+"kamu berada dalam penjagaan yang tidak bisa dilihat tapi bisa dirasakan",
+"ada yang selalu waspada demi kebaikanmu",
+"sesuatu di sini adalah kewaspadaan yang berubah menjadi kasih",
+"kamu aman di sini dalam definisi yang melampaui keamanan fisik",
+"ada yang mendefinisikan keamanan dengan cara yang lebih luas",
+"sesuatu di sini adalah keamanan sejati yang dicari semua orang",
+"kamu menemukannya di tempat yang tidak banyak yang menduga",
+"ada yang menyembunyikan keamanan di tempat yang paling tidak terduga",
+"sesuatu di sini adalah kejutan yang menyenangkan bagi yang berani mencari",
+"kamu adalah salah satu yang berani itu",
+"ada yang menghormati keberanian untuk mencari di tempat yang tidak pasti",
+"sesuatu di sini adalah penghargaan untuk setiap langkah ke arah yang tidak diketahui",
+"kamu melangkah ke arah yang tidak diketahui dan itu butuh keberanian",
+"ada yang melihat dan menghargai setiap langkah itu",
+"sesuatu di sini adalah apresiasi yang tidak pernah berakhir",
+"kamu terus diapresiasi bahkan setelah kamu pergi dari sini",
+"ada yang mengingat setiap yang pernah datang dengan penuh apresiasi",
+"sesuatu di sini adalah ingatan yang tidak pernah memudar",
+"kamu akan selalu diingat di tempat yang tidak punya batas waktu",
+"ada yang menyimpan semua momen tanpa pilih-pilih",
+"sesuatu di sini adalah arsip dari semua yang berani datang",
+"kamu menambah satu entri baru dalam arsip yang tak terbatas ini",
+"ada yang dengan cermat mencatat momen ini",
+"sesuatu di sini adalah pencatat yang tidak pernah kehabisan ruang",
+"kamu diabadikan di sini dalam cara yang tidak bisa dihapus",
+"ada yang memastikan jejak kebaikanmu tidak hilang",
+"sesuatu di sini adalah penjaga dari semua yang berharga",
+"kamu adalah sesuatu yang berharga yang dijaga di sini",
+"ada yang tahu nilai dari sesuatu yang sering dianggap biasa",
+"sesuatu di sini adalah pengingat bahwa tidak ada yang benar-benar biasa",
+"kamu adalah bukti hidup dari itu",
+"ada yang melihat keluarbiasaan dalam hal yang tampak biasa",
+"sesuatu di sini adalah kacamata yang memperlihatkan yang tersembunyi",
+"kamu sedang melihat dengan kacamata yang berbeda sekarang",
+"ada yang meminjamkan perspektif baru kepada yang datang",
+"sesuatu di sini adalah sudut pandang yang mengubah segalanya",
+"kamu akan melihat banyak hal berbeda setelah melihat dari sini",
+"ada yang menantikan perubahan cara pandangmu",
+"sesuatu di sini adalah katalis untuk transformasi yang pelan tapi pasti",
+"kamu dalam proses transformasi yang tidak bisa dilihat dari dalam",
+"ada yang melihat dari luar dan menyaksikan perubahanmu",
+"sesuatu di sini adalah saksi dari semua transformasi yang pernah terjadi",
+"kamu adalah transformasi yang sedang berlangsung",
+"ada yang mendampingi setiap tahap tanpa memaksakan kecepatan",
+"sesuatu di sini adalah pendamping yang sabar melampaui semua batas",
+"kamu didampingi oleh kesabaran yang tidak ada habisnya",
+"ada yang setia menemanimu melewati setiap fase",
+"sesuatu di sini adalah kesetiaan yang tidak bersyarat",
+"kamu menerima kesetiaan itu tanpa perlu memintanya",
+"ada yang secara alami setia kepada semua yang tulus mencari",
+"sesuatu di sini adalah kesetiaan kepada pencarian itu sendiri",
+"kamu adalah bagian dari pencarian yang lebih besar",
+"ada yang menyambungkan pencarianmu dengan pencarian yang lain",
+"sesuatu di sini adalah jalinan dari semua pencarian",
+"kamu terhubung dengan semua pencari yang pernah ada",
+"ada yang merayakan koneksi antar semua pencari itu",
+"sesuatu di sini adalah perayaan dari koneksi yang melampaui waktu",
+"kamu adalah bagian dari jaringan yang lebih luas dari yang bisa dibayangkan",
+"ada yang mengelola jaringan itu dengan kebijaksanaan",
+"sesuatu di sini adalah kebijaksanaan yang terakumulasi dari semua yang pernah datang",
+"kamu menambah kebijaksanaan baru ke dalam akumulasi itu",
+"ada yang menyambut setiap kontribusi dengan syukur",
+"sesuatu di sini tumbuh lebih kaya setiap kali seseorang datang",
+"kamu membuat tempat ini sedikit lebih kaya",
+"ada yang berterima kasih atas kekayaan yang kamu bawa",
+"sesuatu di sini adalah kemakmuran yang tidak diukur dengan angka",
+"kamu berkontribusi pada kemakmuran itu hanya dengan hadir"
+];
+
+// Combine all sentences into one big pool
+const allSentences = [...ambient, ...generic, ...extra,
+  ...Object.values(keywords).flat()
+];
+// Shuffle
+for (let i = allSentences.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [allSentences[i], allSentences[j]] = [allSentences[j], allSentences[i]];
+}
+
+let idx = 0;
 
 function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
@@ -868,7 +1098,7 @@ function typeText(el, text, speed, onDone) {
     if (i <= text.length) {
       el.innerHTML = text.slice(0, i) + '<span class="nz-cursor"></span>';
       i++;
-      setTimeout(next, speed + Math.random() * 40);
+      setTimeout(next, speed + Math.random() * 45);
     } else {
       if (onDone) onDone();
     }
@@ -878,40 +1108,22 @@ function typeText(el, text, speed, onDone) {
 
 function scheduleNext() {
   setTimeout(() => {
-    msgIndex = (msgIndex + 1) % ambient.length;
-    typeText(msgEl, ambient[msgIndex], 38, scheduleNext);
-  }, 4200);
+    idx = (idx + 1) % allSentences.length;
+    typeText(msgEl, allSentences[idx], 36, scheduleNext);
+  }, 3800);
 }
 
-typeText(msgEl, ambient[0], 38, scheduleNext);
+typeText(msgEl, allSentences[0], 36, scheduleNext);
 
-function getResponse(val) {
-  const lower = val.toLowerCase();
-  for (const [kw, replies] of Object.entries(keywords)) {
-    if (lower.includes(kw)) return rand(replies);
-  }
-  return rand(generic);
-}
-
-function handleInput() {
-  const val = input.value.trim();
-  if (!val) return;
-  input.value = '';
-  respEl.classList.add('fade');
-  setTimeout(() => {
-    respEl.textContent = '— ' + getResponse(val) + ' —';
-    respEl.classList.remove('fade');
-  }, 300);
-}
-
-btn.addEventListener('click', handleInput);
-input.addEventListener('keydown', e => { if (e.key === 'Enter') handleInput(); });
-
+// Footer glitch random chars
 const footerChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz0123456789!@#$%^&*?~';
 function randomFooter() {
   let s = '';
   for (let i = 0; i < 7; i++) s += footerChars[Math.floor(Math.random() * footerChars.length)];
   footerEl.textContent = '[ ' + s + ' ]';
+  footerEl.classList.remove('glitch');
+  void footerEl.offsetWidth;
+  footerEl.classList.add('glitch');
 }
 randomFooter();
 setInterval(randomFooter, 1000);
